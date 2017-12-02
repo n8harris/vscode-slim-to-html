@@ -41,6 +41,7 @@ export class SlimPreview {
             this.getDisplayContents(editor).then(() => {
               this._provider.updateContent(uri);
             }, (error) => {
+              this._conversionResolved = true;
               this.generateErrorMessage(error);
             });
           }
@@ -97,10 +98,10 @@ export class SlimPreview {
             }
           }
         }, (error) => {
-          console.log(error);
+          this._conversionResolved = true;
           this.generateErrorMessage(error);
         }).catch((error) => {
-          console.log(error);
+          this._conversionResolved = true;
           this.generateErrorMessage(error.getBody());
         });
     }
