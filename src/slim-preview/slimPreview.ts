@@ -79,10 +79,11 @@ export class SlimPreview {
         let text = this.getDocumentContent(editor);
         const request = {
           method: 'POST',
-          params: {
+          body: {
             html: text,
             html_pre_processor: 'slim'
-          }
+          },
+          dataType: 'form-url-encoded'
         };
         this._conversionResolved = false;
         return requestify.request(this._conversionUrl, request).then((responseBody) => {
@@ -98,6 +99,7 @@ export class SlimPreview {
             }
           }
         }, (error) => {
+            console.log(error);
           this._conversionResolved = true;
           this.generateErrorMessage(error);
         }).catch((error) => {
