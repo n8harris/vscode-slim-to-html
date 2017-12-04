@@ -2,7 +2,7 @@
   "name": "slim-to-html",
   "displayName": "Slim To Html",
   "description": "",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "n8harris",
   "engines": {
     "vscode": "^1.17.0"

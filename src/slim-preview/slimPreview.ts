@@ -12,6 +12,8 @@ import { WindowService } from "../vscode/windowService";
 export class SlimPreview {
 
     private _delay = 500;
+    private _contentToReplace = 'isopen';
+    private _keyForReplace = 'replace-bad-stuff';
     private _provider: SlimPreviewContentProvider;
     private _workspaceService: WorkspaceService;
     private _windowService: WindowService;
@@ -77,6 +79,7 @@ export class SlimPreview {
 
     private getDisplayContents(editor:TextEditor) {
         let text = this.getDocumentContent(editor);
+        text = text.replace(this._contentToReplace, this._keyForReplace);
         const request = {
           method: 'POST',
           body: {
@@ -93,13 +96,14 @@ export class SlimPreview {
             this.generateErrorMessage(response.error.html.message);
           } else {
             if (response.results && response.results.html) {
-              this._provider.setConversionContent(response.results.html);
+              let html = response.results.html;
+              html = html.replace(this._keyForReplace, this._contentToReplace);
+              this._provider.setConversionContent(html);
             } else {
               this.generateErrorMessage("Unable to generate html");
             }
           }
         }, (error) => {
-            console.log(error);
           this._conversionResolved = true;
           this.generateErrorMessage(error);
         }).catch((error) => {
