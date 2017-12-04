@@ -38,5 +38,6 @@
   },
   "dependencies": {
     "requestify": "^0.1.16"
-  }
+  },
+  "icon": "https://raw.githubusercontent.com/n8harris/vscode-slim-to-html/master/src/images/slim-to-html-logo.png"
 }
