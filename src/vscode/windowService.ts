@@ -12,4 +12,8 @@ export class WindowService {
     public getActiveTextEditor(): TextEditor {
         return window.activeTextEditor;
     }
+
+    public showErrorMessage(message): Thenable<string>{
+        return window.showErrorMessage(message);
+    }
  }

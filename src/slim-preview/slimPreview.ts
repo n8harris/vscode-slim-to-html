@@ -92,8 +92,8 @@ export class SlimPreview {
         return requestify.request(this._conversionUrl, request).then((responseBody) => {
           const response = responseBody.getBody();
           this._conversionResolved = true;
-          if (response.error && response.error.html && response.error.html.message) {
-            this.generateErrorMessage(response.error.html.message);
+          if (response.errors && response.errors.html && response.errors.html.message) {
+            this.generateErrorMessage(response.errors.html.message);
           } else {
             if (response.results && response.results.html) {
               let html = response.results.html;
@@ -116,7 +116,7 @@ export class SlimPreview {
         return editor.document.getText();
     }
 
-    private generateErrorMessage(error):string {
-        return `Error: ${error}`;
+    private generateErrorMessage(error):void {
+        this._windowService.showErrorMessage(error);
     }
 }
