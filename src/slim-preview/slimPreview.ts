@@ -12,13 +12,17 @@ import { WindowService } from "../vscode/windowService";
 export class SlimPreview {
 
     private _delay = 500;
-    private _contentToReplace = 'isopen';
-    private _keyForReplace = 'replace-bad-stuff';
+    private _htmlExtension = 'html';
+    private _slimExtension = 'slim';
+    private _extensionSeparator = '.';
+    private _fileType = 'file';
+    private _untitledType = 'untitled';
     private _provider: SlimPreviewContentProvider;
     private _workspaceService: WorkspaceService;
     private _windowService: WindowService;
     private _conversionResolved = true;
     private _conversionUrl = 'http://preprocessor.codepen.io';
+    private _htmlConversionUrl = 'http://www.html2slim.net/convert.json';
 
     constructor(provider: SlimPreviewContentProvider, workspaceService: WorkspaceService, windowService: WindowService){
         this._provider = provider;
@@ -37,7 +41,7 @@ export class SlimPreview {
 
     public updateContent(fileName:string): void {
         const editor = this._windowService.getActiveTextEditor();
-        const uri = this.generatePreviewUri(fileName);
+        const uri = this.generatePreviewUri(fileName, editor.document.languageId);
         if (editor){
           if (this._conversionResolved) {
             this.getDisplayContents(editor).then(() => {
@@ -52,12 +56,12 @@ export class SlimPreview {
 
     public isValidDocument(document: TextDocument): boolean {
         const activeTextEditor = this._windowService.getActiveTextEditor();
-        return document.languageId === "slim" && ( activeTextEditor && document === activeTextEditor.document);
+        return (document.languageId === this._slimExtension || document.languageId === this._htmlExtension) && ( activeTextEditor && document === activeTextEditor.document);
     }
 
     public previewDocument(): PromiseLike<TextEditor> {
         let editor = this._windowService.getActiveTextEditor();
-        const previewUri = this.generatePreviewUri(editor.document.fileName);
+        const previewUri = this.generatePreviewUri(editor.document.fileName, editor.document.languageId);
         this.updateContent(editor.document.fileName);
         return this._workspaceService.openTextDocument(previewUri).then((textDoc)=>{ return this.showTextDocument(textDoc); });
     }
@@ -65,12 +69,20 @@ export class SlimPreview {
     private showTextDocument(textDoc:TextDocument): Thenable<TextEditor>{
         let editor = this._windowService.getActiveTextEditor();
         const displayColumn = this.getDisplayColumn(editor.viewColumn);
-        return this._windowService.showTextDocument(textDoc, displayColumn, true);
+        return this._windowService.showTextDocument(textDoc, displayColumn, false);
     }
 
-    private generatePreviewUri = (baseUrl:string): Uri => {
+    private generatePreviewUri = (baseUrl:string, languageId:string): Uri => {
         const separator = os.platform() === "win32" ? "\\" : "//";
-        return Uri.parse(`slim-to-html:${separator}${baseUrl}.html`);
+        const extensionSeparator = '.';
+        const type = languageId == this._slimExtension ? this._untitledType : this._fileType;
+        let uri = `${type}:${separator}${baseUrl}`;
+        if (languageId == this._slimExtension) {
+            uri += extensionSeparator + this._htmlExtension;
+        } else {
+            uri = uri.substr(0, uri.length - (this._htmlExtension.length + extensionSeparator.length));
+        }
+        return Uri.parse(uri);
     }
 
     private getDisplayColumn(currentColummn: ViewColumn): number {
@@ -79,17 +91,24 @@ export class SlimPreview {
 
     private getDisplayContents(editor:TextEditor) {
         let text = this.getDocumentContent(editor);
-        text = text.replace(this._contentToReplace, this._keyForReplace);
         const request = {
           method: 'POST',
-          body: {
-            html: text,
-            html_pre_processor: 'slim'
-          },
           dataType: 'form-url-encoded'
         };
+        let url = this._conversionUrl;
+        if (editor.document.languageId == this._slimExtension) {
+          request['body'] = {
+            html: text,
+            html_pre_processor: 'slim'
+          };
+        } else {
+          url = this._htmlConversionUrl;
+          request['body'] = {
+            data: text
+          };
+        }
         this._conversionResolved = false;
-        return requestify.request(this._conversionUrl, request).then((responseBody) => {
+        return requestify.request(url, request).then((responseBody) => {
           const response = responseBody.getBody();
           this._conversionResolved = true;
           if (response.errors && response.errors.html && response.errors.html.message) {
@@ -97,10 +116,12 @@ export class SlimPreview {
           } else {
             if (response.results && response.results.html) {
               let html = response.results.html;
-              html = html.replace(this._keyForReplace, this._contentToReplace);
               this._provider.setConversionContent(html);
+            } else if (response.data && response.data.slim) {
+              let slim = response.data.slim;
+              this._provider.setConversionContent(slim);
             } else {
-              this.generateErrorMessage("Unable to generate html");
+              this.generateErrorMessage("Unable to generate " + editor.document.languageId);
             }
           }
         }, (error) => {

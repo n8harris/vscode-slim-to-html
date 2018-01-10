@@ -1,12 +1,17 @@
 'use strict';
 
 import * as vscode from "vscode";
-import { window, Disposable, TextDocumentChangeEvent, Uri, TextDocument, TextEditor, ViewColumn } from "vscode";
+import { window, Disposable, TextDocumentChangeEvent, TextDocumentShowOptions, Uri, TextDocument, TextEditor, ViewColumn } from "vscode";
 
 export class WindowService {
 
     public showTextDocument(textDoc:TextDocument, column:ViewColumn, preserveFocus:boolean): Thenable<TextEditor>{
-        return window.showTextDocument(textDoc, column, preserveFocus);
+        const options: TextDocumentShowOptions  = {
+            viewColumn: column,
+            preserveFocus: preserveFocus,
+            preview: false
+        };
+        return window.showTextDocument(textDoc, options);
     }
 
     public getActiveTextEditor(): TextEditor {
