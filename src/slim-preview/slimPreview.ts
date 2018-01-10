@@ -20,14 +20,16 @@ export class SlimPreview {
     private _provider: SlimPreviewContentProvider;
     private _workspaceService: WorkspaceService;
     private _windowService: WindowService;
+    private _isReadOnly: boolean;
     private _conversionResolved = true;
     private _conversionUrl = 'http://preprocessor.codepen.io';
     private _htmlConversionUrl = 'http://www.html2slim.net/convert.json';
 
-    constructor(provider: SlimPreviewContentProvider, workspaceService: WorkspaceService, windowService: WindowService){
+    constructor(provider: SlimPreviewContentProvider, workspaceService: WorkspaceService, windowService: WindowService, isReadOnly: boolean){
         this._provider = provider;
         this._workspaceService = workspaceService;
         this._windowService = windowService;
+        this._isReadOnly = isReadOnly;
     }
 
     public start(): Disposable {
@@ -75,7 +77,8 @@ export class SlimPreview {
     private generatePreviewUri = (baseUrl:string, languageId:string): Uri => {
         const separator = os.platform() === "win32" ? "\\" : "//";
         const extensionSeparator = '.';
-        const type = languageId == this._slimExtension ? this._untitledType : this._fileType;
+        const htmlType = this._isReadOnly ? 'slim-to-html' : this._untitledType;
+        const type = languageId == this._slimExtension ? htmlType : this._fileType;
         let uri = `${type}:${separator}${baseUrl}`;
         if (languageId == this._slimExtension) {
             uri += extensionSeparator + this._htmlExtension;
