@@ -18,11 +18,6 @@
     "keybindings": [
       {
         "command": "extension.slim-to-html",
-        "key": "ctrl+shift+.",
-        "when": "editorTextFocus && editorLangId == 'slim'"
-      },
-      {
-        "command": "extension.slim-to-html-readonly",
         "key": "ctrl+shift+/",
         "when": "editorTextFocus && editorLangId == 'slim'"
       }
